@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consulta de CEP</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+      color: #1f2937;
+    }
+
+    .card {
+      width: min(620px, 92vw);
+      background: #ffffff;
+      padding: 1.5rem;
+      border-radius: 14px;
+      box-shadow: 0 10px 28px rgba(30, 64, 175, 0.15);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.4rem;
+    }
+
+    form {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      flex: 1 1 240px;
+      padding: 0.7rem;
+      border: 1px solid #93c5fd;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 0.7rem 1rem;
+      border: 0;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    #mensagem {
+      min-height: 1.2rem;
+      margin-bottom: 0.8rem;
+      color: #b91c1c;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    th,
+    td {
+      padding: 0.65rem 0.8rem;
+      background: #f3f4f6;
+      border-top: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      width: 34%;
+      color: #374151;
+      border-left: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+      border-radius: 10px 0 0 10px;
+    }
+
+    td {
+      border-right: 1px solid #e5e7eb;
+      border-radius: 0 10px 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Buscar CEP (ViaCEP)</h1>
+
+    <form id="formCep">
+      <input
+        id="cep"
+        type="text"
+        inputmode="numeric"
+        maxlength="9"
+        placeholder="Digite o CEP (ex: 01001-000)"
+        aria-label="CEP"
+        required
+      />
+      <button type="submit" id="btnBuscar">Buscar</button>
+    </form>
+
+    <p id="mensagem" role="status" aria-live="polite"></p>
+
+    <section id="resultado" class="table-wrap" hidden>
+      <table aria-label="Resultado da consulta de CEP">
+        <tbody>
+          <tr><th scope="row">CEP</th><td id="rCep">-</td></tr>
+          <tr><th scope="row">Logradouro</th><td id="rLogradouro">-</td></tr>
+          <tr><th scope="row">Bairro</th><td id="rBairro">-</td></tr>
+          <tr><th scope="row">Cidade</th><td id="rLocalidade">-</td></tr>
+          <tr><th scope="row">UF</th><td id="rUf">-</td></tr>
+          <tr><th scope="row">Estado</th><td id="rEstado">-</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('formCep');
+    const inputCep = document.getElementById('cep');
+    const btnBuscar = document.getElementById('btnBuscar');
+    const mensagem = document.getElementById('mensagem');
+    const resultado = document.getElementById('resultado');
+
+    const campos = {
+      cep: document.getElementById('rCep'),
+      logradouro: document.getElementById('rLogradouro'),
+      bairro: document.getElementById('rBairro'),
+      localidade: document.getElementById('rLocalidade'),
+      uf: document.getElementById('rUf'),
+      estado: document.getElementById('rEstado')
+    };
+
+    inputCep.addEventListener('input', () => {
+      let valor = inputCep.value.replace(/\D/g, '').slice(0, 8);
+      if (valor.length > 5) {
+        valor = valor.replace(/(\d{5})(\d)/, '$1-$2');
+      }
+      inputCep.value = valor;
+    });
+
+    function mostrarErro(texto) {
+      mensagem.style.color = '#b91c1c';
+      mensagem.textContent = texto;
+      resultado.hidden = true;
+    }
+
+    function preencherResultado(data) {
+      campos.cep.textContent = data.cep || '-';
+      campos.logradouro.textContent = data.logradouro || '-';
+      campos.bairro.textContent = data.bairro || '-';
+      campos.localidade.textContent = data.localidade || '-';
+      campos.uf.textContent = data.uf || '-';
+      campos.estado.textContent = data.estado || '-';
+      resultado.hidden = false;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const cepLimpo = inputCep.value.replace(/\D/g, '');
+      if (cepLimpo.length !== 8) {
+        mostrarErro('Informe um CEP com 8 dígitos.');
+        return;
+      }
+
+      try {
+        mensagem.textContent = 'Buscando...';
+        btnBuscar.disabled = true;
+        resultado.hidden = true;
+
+        const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        if (!resposta.ok) {
+          throw new Error('Falha na consulta.');
+        }
+
+        const data = await resposta.json();
+        if (data.erro) {
+          mostrarErro('CEP não encontrado.');
+          return;
+        }
+
+        mensagem.style.color = '#047857';
+        mensagem.textContent = 'Consulta realizada com sucesso.';
+        preencherResultado(data);
+      } catch (erro) {
+        mensagem.style.color = '#b91c1c';
+        mostrarErro('Não foi possível consultar o CEP. Tente novamente.');
+      } finally {
+        btnBuscar.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
