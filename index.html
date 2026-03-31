@@ -15,16 +15,16 @@
       min-height: 100vh;
       display: grid;
       place-items: center;
-      background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+      background: #f2f4f8;
       color: #1f2937;
     }
 
     .card {
-      width: min(620px, 92vw);
+      width: min(540px, 92vw);
       background: #ffffff;
       padding: 1.5rem;
-      border-radius: 14px;
-      box-shadow: 0 10px 28px rgba(30, 64, 175, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     }
 
     h1 {
@@ -40,9 +40,9 @@
     }
 
     input {
-      flex: 1 1 240px;
+      flex: 1 1 200px;
       padding: 0.7rem;
-      border: 1px solid #93c5fd;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
       font-size: 1rem;
     }
@@ -68,36 +68,19 @@
       color: #b91c1c;
     }
 
-    .table-wrap {
-      overflow-x: auto;
+    dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 0.45rem 0.8rem;
     }
 
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 8px;
+    dt {
+      font-weight: bold;
     }
 
-    th,
-    td {
-      padding: 0.65rem 0.8rem;
-      background: #f3f4f6;
-      border-top: 1px solid #e5e7eb;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-    }
-
-    th {
-      width: 34%;
-      color: #374151;
-      border-left: 1px solid #e5e7eb;
-      border-right: 1px solid #e5e7eb;
-      border-radius: 10px 0 0 10px;
-    }
-
-    td {
-      border-right: 1px solid #e5e7eb;
-      border-radius: 0 10px 10px 0;
+    dd {
+      margin: 0;
     }
   </style>
 </head>
@@ -120,17 +103,15 @@
 
     <p id="mensagem" role="status" aria-live="polite"></p>
 
-    <section id="resultado" class="table-wrap" hidden>
-      <table aria-label="Resultado da consulta de CEP">
-        <tbody>
-          <tr><th scope="row">CEP</th><td id="rCep">-</td></tr>
-          <tr><th scope="row">Logradouro</th><td id="rLogradouro">-</td></tr>
-          <tr><th scope="row">Bairro</th><td id="rBairro">-</td></tr>
-          <tr><th scope="row">Cidade</th><td id="rLocalidade">-</td></tr>
-          <tr><th scope="row">UF</th><td id="rUf">-</td></tr>
-          <tr><th scope="row">Estado</th><td id="rEstado">-</td></tr>
-        </tbody>
-      </table>
+    <section id="resultado" hidden>
+      <dl>
+        <dt>CEP:</dt><dd id="rCep">-</dd>
+        <dt>Logradouro:</dt><dd id="rLogradouro">-</dd>
+        <dt>Bairro:</dt><dd id="rBairro">-</dd>
+        <dt>Cidade:</dt><dd id="rLocalidade">-</dd>
+        <dt>UF:</dt><dd id="rUf">-</dd>
+        <dt>Estado:</dt><dd id="rEstado">-</dd>
+      </dl>
     </section>
   </main>
 
@@ -159,7 +140,6 @@
     });
 
     function mostrarErro(texto) {
-      mensagem.style.color = '#b91c1c';
       mensagem.textContent = texto;
       resultado.hidden = true;
     }
@@ -199,11 +179,9 @@
           return;
         }
 
-        mensagem.style.color = '#047857';
         mensagem.textContent = 'Consulta realizada com sucesso.';
         preencherResultado(data);
       } catch (erro) {
-        mensagem.style.color = '#b91c1c';
         mostrarErro('Não foi possível consultar o CEP. Tente novamente.');
       } finally {
         btnBuscar.disabled = false;
